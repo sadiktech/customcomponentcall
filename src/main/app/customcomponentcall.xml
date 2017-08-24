@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:json="http://www.mulesoft.org/schema/mule/json" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
+http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd">
+    <http:listener-config name="HTTP_Listener_Configuration" host="0.0.0.0" port="8081" doc:name="HTTP Listener Configuration"/>
+    <flow name="customcomponentcallFlow">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/customcomponent" allowedMethods="GET" doc:name="HTTP"/>
+        <choice doc:name="Choice">
+            <when expression="#[message.inboundProperties.'http.query.params'.method=='map']">
+                <set-variable doc:name="Variable" value="#['getMapReturnValue']" variableName="method"/>
+                <flow-ref name="javacomponent" doc:name="Flow Map Reference"/>
+            </when>
+            <when expression="#[message.inboundProperties.'http.query.params'.method=='string']">
+              	<set-variable doc:name="Variable" value="#['getStringReturnValue']" variableName="method"/>
+                <flow-ref name="javacomponent" doc:name="Flow String Reference"/>
+            </when>                
+            <otherwise>
+                <set-payload value="Not found suitable method !!" doc:name="Set Payload"/>
+            </otherwise>
+        </choice>
+        <json:object-to-json-transformer doc:name="Object to JSON"/>
+    </flow>
+    <flow name="javacomponent">
+        <component class="com.sadik.custom.CustomComponent" doc:name="Java"/>
+    </flow>
+</mule>
